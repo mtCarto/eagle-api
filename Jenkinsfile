@@ -172,7 +172,7 @@ def nodejsSonarqube () {
   }
 }
 
-ef zapScanner () {
+def zapScanner () {
   openshift.withCluster() {
     openshift.withProject() {
       // The jenkins-slave-zap image has been purpose built for supporting ZAP scanning.
