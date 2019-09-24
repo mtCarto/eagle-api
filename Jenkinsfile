@@ -339,65 +339,65 @@ pipeline {
     disableResume()
   }
   stages {
-    stage('Parallel Build Steps') {
-      failFast true
-      parallel {
-        stage('Build') {
-          agent any
-          steps {
-            script {
-              pastBuilds = []
-              buildsSinceLastSuccess(pastBuilds, currentBuild);
-              CHANGELOG = getChangeLog(pastBuilds);
+    // stage('Parallel Build Steps') {
+    //   failFast true
+    //   parallel {
+    //     stage('Build') {
+    //       agent any
+    //       steps {
+    //         script {
+    //           pastBuilds = []
+    //           buildsSinceLastSuccess(pastBuilds, currentBuild);
+    //           CHANGELOG = getChangeLog(pastBuilds);
 
-              echo ">>>>>>Changelog: \n ${CHANGELOG}"
+    //           echo ">>>>>>Changelog: \n ${CHANGELOG}"
 
-              try {
-                sh("oc extract secret/rocket-chat-secrets --to=${env.WORKSPACE} --confirm")
-                ROCKET_DEPLOY_WEBHOOK = sh(returnStdout: true, script: 'cat rocket-deploy-webhook')
-                ROCKET_QA_WEBHOOK = sh(returnStdout: true, script: 'cat rocket-qa-webhook')
+    //           try {
+    //             sh("oc extract secret/rocket-chat-secrets --to=${env.WORKSPACE} --confirm")
+    //             ROCKET_DEPLOY_WEBHOOK = sh(returnStdout: true, script: 'cat rocket-deploy-webhook')
+    //             ROCKET_QA_WEBHOOK = sh(returnStdout: true, script: 'cat rocket-qa-webhook')
 
-                echo "Building eagle-api develop branch"
-                openshiftBuild bldCfg: 'eagle-api', showBuildLogs: 'true'
-                echo "Build done"
+    //             echo "Building eagle-api develop branch"
+    //             openshiftBuild bldCfg: 'eagle-api', showBuildLogs: 'true'
+    //             echo "Build done"
 
-                echo ">>> Get Image Hash"
-                // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
-                // Tag the images for deployment based on the image's hash
-                IMAGE_HASH = sh (
-                  script: """oc get istag eagle-api:latest -o template --template=\"{{.image.dockerImageReference}}\"|awk -F \":\" \'{print \$3}\'""",
-                  returnStdout: true).trim()
-                echo ">> IMAGE_HASH: ${IMAGE_HASH}"
-              } catch (error) {
-                notifyRocketChat(
-                  "@all The latest build of eagle-api seems to be broken. \n Error: \n ${error}",
-                  ROCKET_QA_WEBHOOK
-                )
-                throw error
-              }
-            }
-          }
-        }
+    //             echo ">>> Get Image Hash"
+    //             // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
+    //             // Tag the images for deployment based on the image's hash
+    //             IMAGE_HASH = sh (
+    //               script: """oc get istag eagle-api:latest -o template --template=\"{{.image.dockerImageReference}}\"|awk -F \":\" \'{print \$3}\'""",
+    //               returnStdout: true).trim()
+    //             echo ">> IMAGE_HASH: ${IMAGE_HASH}"
+    //           } catch (error) {
+    //             notifyRocketChat(
+    //               "@all The latest build of eagle-api seems to be broken. \n Error: \n ${error}",
+    //               ROCKET_QA_WEBHOOK
+    //             )
+    //             throw error
+    //           }
+    //         }
+    //       }
+    //     }
 
-        // stage('Unit Tests') {
-        //   steps {
-        //     script {
-        //       echo "Running Unit Tests"
-        //       def result = nodejsTester()
-        //     }
-        //   }
-        // }
+    //     // stage('Unit Tests') {
+    //     //   steps {
+    //     //     script {
+    //     //       echo "Running Unit Tests"
+    //     //       def result = nodejsTester()
+    //     //     }
+    //     //   }
+    //     // }
 
-        stage('Sonarqube') {
-          steps {
-            script {
-              echo "Running Sonarqube"
-              def result = nodejsSonarqube()
-            }
-          }
-        }
-      }
-    }
+    //     stage('Sonarqube') {
+    //       steps {
+    //         script {
+    //           echo "Running Sonarqube"
+    //           def result = nodejsSonarqube()
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
     // stage('Deploy to dev'){
     //   steps {
